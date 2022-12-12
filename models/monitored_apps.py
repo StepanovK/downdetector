@@ -38,7 +38,7 @@ class MonitoredApp(db.Model):
         token = None
         if generate_token:
             token = secrets.token_urlsafe(16)
-            self.token_hash = hashlib.sha224(token.encode()).hexdigest()
+            self.token_hash = self.get_token_hash(token)
         db.session.add(self)
         db.session.commit()
         return token
@@ -48,4 +48,8 @@ class MonitoredApp(db.Model):
         db.session.commit()
 
     def check_token(self, token: str):
-        return secrets.compare_digest(self.token_hash, token.encode())
+        return secrets.compare_digest(self.token_hash, self.get_token_hash(token))
+
+    @classmethod
+    def get_token_hash(cls, token: str) -> str:
+        return hashlib.sha224(token.encode()).hexdigest()

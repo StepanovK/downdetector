@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from db import db
 from resources.monitored_app import App, AppList
+from resources.app_log import Log
 
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ with app.app_context():
 
 api.add_resource(App, '/app')
 api.add_resource(AppList, '/app_list')
+api.add_resource(Log, '/log')
 
 if __name__ == '__main__':
     app.run(debug=True, port=3030)

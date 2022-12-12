@@ -12,13 +12,17 @@ class ApplicationLog(db.Model):
     level = db.Column(db.Integer)  # 0 - info, 1 - warning, 2 - error
 
     def json(self):
-        return {
-            "app_id": self.app,
-            "date": self.date,
+        json_obj = {
+            "app_name": self.app.name,
+            "date": 0,
             "short_message": self.short_message,
             "message": self.message,
             "level": self.level,
         }
+        if self.date:
+            json_obj['date'] = self.date.timestamp()
+
+        return json_obj
 
     @classmethod
     def get_all(cls):
