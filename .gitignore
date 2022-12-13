@@ -7,7 +7,6 @@ docker.env
 pgadmin/
 *.env
 *.log.zip
-test.py
 log/
 .idea/
 
