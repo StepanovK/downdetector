@@ -3,10 +3,6 @@ import datetime
 import requests
 import json
 import random
-import secrets
-
-from db import db
-from models import ApplicationLog
 
 
 def add_app():
