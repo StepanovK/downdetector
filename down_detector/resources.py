@@ -59,6 +59,8 @@ class Log(Resource):
         level = args.get('level', 0)
         if level is None:
             level = 0
+        elif not isinstance(level, int) or level > 2:
+            return {'message': 'Invalid "level"!'}, 400
 
         log_record = ApplicationLog(app_id=app.id,
                                     date=date,
@@ -71,7 +73,7 @@ class Log(Resource):
         if args.get('message', '') is None:
             log_record.message = ''
         else:
-            log_record.message = args.get('message', '')[:255]
+            log_record.message = args.get('message', '')
         log_record.save()
 
         return log_record.json(), 201
@@ -144,7 +146,7 @@ class App(Resource):
         try:
             token = app.save(generate_token=True)
         except SQLAlchemyError:
-            return {'message': 'An error occurred creating the store.'}, 500
+            return {'message': 'An error occurred creating the app.'}, 500
 
         app_json = app.json()
         app_json['token'] = token

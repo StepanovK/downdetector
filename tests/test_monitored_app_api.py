@@ -37,26 +37,39 @@ def test_add_logs_errors(client, app):
     app_info = json.loads(res.text)
 
     fake = Faker('ru_RU')
-    test_log = {
-        'app_name': fake.name(),
+    log = {
+        'app_name': app_info['name'],
         'token': app_info['token'],
         'date': datetime.datetime.now().timestamp(),
         'level': fake.random.randint(0, 2),
         'short_message': fake.text(200),
         'message': fake.text(500),
     }
-    res = client.post('http://127.0.0.1:3030/log', json=test_log)
+
+    wrong_log = log.copy()
+    wrong_log['app_name'] = fake.name()
+    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
     assert res.status_code == 404
 
-    test_log.pop('app_name')
-    res = client.post('http://127.0.0.1:3030/log', json=test_log)
+    wrong_log = log.copy()
+    wrong_log.pop('app_name')
+    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
     assert res.status_code == 400
 
-    test_log['app_name'] = app_info['name']
-    test_log.pop('token')
-    res = client.post('http://127.0.0.1:3030/log', json=test_log)
+    wrong_log = log.copy()
+    wrong_log.pop('token')
+    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
     assert res.status_code == 400
 
+    wrong_log = log.copy()
+    wrong_log['level'] = 9
+    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    assert res.status_code == 400
+
+    wrong_log = log.copy()
+    wrong_log['date'] = 0
+    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    assert res.status_code == 400
     #     log_record = json.loads(res.text)
     #     assert 'app_name' in log_record
     #     assert log_record['app_name'] == app_info['name']
