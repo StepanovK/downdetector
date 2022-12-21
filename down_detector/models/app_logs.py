@@ -1,4 +1,4 @@
-from db import db
+from .extensions import db
 
 
 class ApplicationLog(db.Model):

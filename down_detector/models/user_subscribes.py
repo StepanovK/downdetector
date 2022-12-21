@@ -1,18 +1,18 @@
-from db import db
+from .extensions import db
 
 
-class ApplicationStatusCheck(db.Model):
-    __tablename__ = 'app_status_checks'
+class UserSubscribe(db.Model):
+    __tablename__ = 'user_subscribes'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     app_id = db.Column(db.Integer, db.ForeignKey('apps.id'), nullable=False)
-    date = db.Column(db.DateTime)
+    token = db.Column(db.String(255))
 
     def json(self):
         return {
-            'id': self.id,
+            'user': self.user_id,
             'app': self.app_id,
-            'date': self.date,
         }
 
     @classmethod

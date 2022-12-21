@@ -3,3 +3,4 @@ from .users import User
 from .status_cheks import ApplicationStatusCheck
 from .user_subscribes import UserSubscribe
 from .app_logs import ApplicationLog
+from .extensions import db
