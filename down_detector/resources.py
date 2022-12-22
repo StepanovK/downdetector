@@ -145,6 +145,30 @@ class AppList(Resource):
         return {'apps': [app.json() for app in MonitoredApp.get_all()]}
 
 
+class StatusCheck(Resource):
+    @classmethod
+    def post(cls):
+        date = datetime.datetime.now()
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('app_name', type=str)
+        parser.add_argument('token', type=str)
+        args = parser.parse_args()
+
+        app = _get_app_by_args(args)
+        if isinstance(app, tuple):
+            return app
+
+        if app is None:
+            return {'message': 'Some problem with getting app!'}, 400
+
+        status_check_record = ApplicationStatusCheck(app_id=app.id,
+                                                     date=date)
+        status_check_record.save()
+
+        return status_check_record.json(), 201
+
+
 def _get_app_by_args(args: Optional[dict] = None) -> Union[MonitoredApp, tuple]:
     if args is None:
         parser = reqparse.RequestParser()

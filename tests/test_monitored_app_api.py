@@ -1,6 +1,6 @@
 import datetime
 
-from down_detector.models import MonitoredApp, ApplicationLog
+from down_detector.models import MonitoredApp, ApplicationLog, ApplicationStatusCheck
 import json
 from faker import Faker
 
@@ -72,23 +72,6 @@ def test_add_logs_errors(client, app):
     assert res.status_code == 400
 
 
-def _add_app(client):
-    fake = Faker('ru_RU')
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
-    data = {
-        'name': fake.name(),
-        'checking_is_active': 1,
-        'checking_interval': 30,
-    }
-
-    return client.post('http://127.0.0.1:3030/app',
-                       json=data,
-                       headers=headers)
-
-
 def test_get_logs(client, app):
     count_log_records = 10
     res = _add_app(client)
@@ -124,6 +107,42 @@ def test_get_logs(client, app):
 
     with app.app_context():
         assert ApplicationLog.query.count() == count_log_records
+
+
+def test_post_status_check(client, app):
+    now = datetime.datetime.now()
+    res = _add_app(client)
+    app_info = json.loads(res.text)
+    status_check = {
+        'app_name': app_info['name'],
+        'token': app_info['token'],
+    }
+    res = client.post('http://127.0.0.1:3030/status_check', json=status_check)
+    assert res.status_code == 201
+    log_json = json.loads(res.text)
+    assert 'app_name' in log_json
+    assert log_json['app_name'] == app_info['name']
+    assert 'date' in log_json
+    assert log_json['date'] >= now.timestamp()
+    with app.app_context():
+        assert ApplicationStatusCheck.query.count() == 1
+
+
+def _add_app(client):
+    fake = Faker('ru_RU')
+    headers = {
+        'Content-Type': 'application/json',
+    }
+
+    data = {
+        'name': fake.name(),
+        'checking_is_active': 1,
+        'checking_interval': 30,
+    }
+
+    return client.post('http://127.0.0.1:3030/app',
+                       json=data,
+                       headers=headers)
 
 
 def _get_test_logs(app_info, count, days=120):

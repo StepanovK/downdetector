@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from .models import db
-from .resources import App, AppList, Log
+from .resources import App, AppList, Log, StatusCheck
 
 
 def create_app(database_uri="sqlite:///down_detector.db"):
@@ -29,6 +29,7 @@ def add_resources(api):
     api.add_resource(App, '/app')
     api.add_resource(AppList, '/app_list')
     api.add_resource(Log, '/log')
+    api.add_resource(StatusCheck, '/status_check')
 
 
 if __name__ == '__main__':

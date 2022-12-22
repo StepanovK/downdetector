@@ -11,8 +11,8 @@ class ApplicationStatusCheck(db.Model):
     def json(self):
         return {
             'id': self.id,
-            'app': self.app_id,
-            'date': self.date,
+            'app_name': self.app.name,
+            'date': self.date.timestamp(),
         }
 
     @classmethod
