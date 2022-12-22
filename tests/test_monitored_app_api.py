@@ -70,11 +70,6 @@ def test_add_logs_errors(client, app):
     wrong_log['date'] = 0
     res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
     assert res.status_code == 400
-    #     log_record = json.loads(res.text)
-    #     assert 'app_name' in log_record
-    #     assert log_record['app_name'] == app_info['name']
-    # with app.app_context():
-    #     assert ApplicationLog.query.count() == count_log_records
 
 
 def _add_app(client):
@@ -94,9 +89,46 @@ def _add_app(client):
                        headers=headers)
 
 
-def _get_test_logs(app_info, count):
+def test_get_logs(client, app):
+    count_log_records = 10
+    res = _add_app(client)
+    app_info = json.loads(res.text)
+    test_logs = _get_test_logs(app_info, count=count_log_records)
+    for test_log in test_logs:
+        client.post('http://127.0.0.1:3030/log', json=test_log)
+
+    logs_params = {
+        'app_name': app_info['name'],
+        'token': app_info['token'],
+    }
+
     fake = Faker('ru_RU')
-    td = datetime.timedelta(days=120)
+
+    fake_logs_params = logs_params.copy()
+    fake_logs_params['token'] = fake.name()
+    res = client.get('http://127.0.0.1:3030/log', json=fake_logs_params)
+    assert res.status_code == 401
+
+    fake_logs_params = logs_params.copy()
+    fake_logs_params['app_name'] = fake.name()
+    res = client.get('http://127.0.0.1:3030/log', json=fake_logs_params)
+    assert res.status_code == 404
+
+    res = client.get('http://127.0.0.1:3030/log', json=logs_params)
+    assert res.status_code == 200
+    logs_res = json.loads(res.text)
+    assert 'count' in logs_res
+    assert logs_res['count'] == count_log_records
+    assert 'items' in logs_res
+    assert len(logs_res['items']) == count_log_records
+
+    with app.app_context():
+        assert ApplicationLog.query.count() == count_log_records
+
+
+def _get_test_logs(app_info, count, days=120):
+    fake = Faker('ru_RU')
+    td = datetime.timedelta(days=days)
     now = datetime.datetime.now()
     start_date = now - td
     now_ts = now.timestamp()

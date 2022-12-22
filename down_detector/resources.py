@@ -30,7 +30,8 @@ class Log(Resource):
 
         result = query.order_by(ApplicationLog.date).all()
 
-        return [rec.json() for rec in result]
+        logs_json = [rec.json() for rec in result]
+        return {'count': len(logs_json), 'items': logs_json}
 
     @classmethod
     def post(cls):
