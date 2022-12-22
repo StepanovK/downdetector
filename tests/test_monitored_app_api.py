@@ -3,6 +3,7 @@ import datetime
 from down_detector.models import MonitoredApp, ApplicationLog, ApplicationStatusCheck
 import json
 from faker import Faker
+from time import sleep
 
 
 def test_create_app(client, app):
@@ -126,6 +127,13 @@ def test_post_status_check(client, app):
     assert log_json['date'] >= now.timestamp()
     with app.app_context():
         assert ApplicationStatusCheck.query.count() == 1
+
+    count_checks = 10
+    for i in range(count_checks):
+        sleep(0.1)
+        client.post('http://127.0.0.1:3030/status_check', json=status_check)
+    with app.app_context():
+        assert ApplicationStatusCheck.query.count() == (count_checks + 1)
 
 
 def _add_app(client):
