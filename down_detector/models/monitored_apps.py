@@ -1,4 +1,6 @@
 from .extensions import db
+from .status_cheks import ApplicationStatusCheck
+from .app_logs import ApplicationLog
 import secrets
 import hashlib
 
@@ -17,13 +19,15 @@ class MonitoredApp(db.Model):
     user_subscribes = db.relationship('UserSubscribe', backref='app', lazy='dynamic')
 
     def json(self):
+        status_checks = self.status_checks.order_by(ApplicationStatusCheck.date.desc()).limit(1)
+        logs = self.logs.order_by(ApplicationLog.date.desc()).limit(500)
         return {
             "id": self.id,
             "name": self.name,
             "checking_interval": self.checking_interval,
             "checking_is_active": self.checking_is_active,
-            "logs": [log.json() for log in self.logs],
-            "status_checks": [status_check.json() for status_check in self.status_checks.order_by('date').limit(100)],
+            "logs": [log.json() for log in logs],
+            "last_activity": 0 if status_checks.count() == 0 else status_checks[0].date.timestamp(),
         }
 
     @classmethod

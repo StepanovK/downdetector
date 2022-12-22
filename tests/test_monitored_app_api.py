@@ -24,7 +24,7 @@ def test_add_logs(client, app):
     app_info = json.loads(res.text)
     test_logs = _get_test_logs(app_info, count=count_log_records)
     for test_log in test_logs:
-        res = client.post('http://127.0.0.1:3030/log', json=test_log)
+        res = client.post('/log', json=test_log)
         assert res.status_code == 201
         log_record = json.loads(res.text)
         assert 'app_name' in log_record
@@ -49,27 +49,27 @@ def test_add_logs_errors(client, app):
 
     wrong_log = log.copy()
     wrong_log['app_name'] = fake.name()
-    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    res = client.post('/log', json=wrong_log)
     assert res.status_code == 404
 
     wrong_log = log.copy()
     wrong_log.pop('app_name')
-    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    res = client.post('/log', json=wrong_log)
     assert res.status_code == 400
 
     wrong_log = log.copy()
     wrong_log.pop('token')
-    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    res = client.post('/log', json=wrong_log)
     assert res.status_code == 400
 
     wrong_log = log.copy()
     wrong_log['level'] = 9
-    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    res = client.post('/log', json=wrong_log)
     assert res.status_code == 400
 
     wrong_log = log.copy()
     wrong_log['date'] = 0
-    res = client.post('http://127.0.0.1:3030/log', json=wrong_log)
+    res = client.post('/log', json=wrong_log)
     assert res.status_code == 400
 
 
@@ -79,7 +79,7 @@ def test_get_logs(client, app):
     app_info = json.loads(res.text)
     test_logs = _get_test_logs(app_info, count=count_log_records)
     for test_log in test_logs:
-        client.post('http://127.0.0.1:3030/log', json=test_log)
+        client.post('/log', json=test_log)
 
     logs_params = {
         'app_name': app_info['name'],
@@ -90,15 +90,15 @@ def test_get_logs(client, app):
 
     fake_logs_params = logs_params.copy()
     fake_logs_params['token'] = fake.name()
-    res = client.get('http://127.0.0.1:3030/log', json=fake_logs_params)
+    res = client.get('/log', json=fake_logs_params)
     assert res.status_code == 401
 
     fake_logs_params = logs_params.copy()
     fake_logs_params['app_name'] = fake.name()
-    res = client.get('http://127.0.0.1:3030/log', json=fake_logs_params)
+    res = client.get('/log', json=fake_logs_params)
     assert res.status_code == 404
 
-    res = client.get('http://127.0.0.1:3030/log', json=logs_params)
+    res = client.get('/log', json=logs_params)
     assert res.status_code == 200
     logs_res = json.loads(res.text)
     assert 'count' in logs_res
@@ -118,7 +118,7 @@ def test_post_status_check(client, app):
         'app_name': app_info['name'],
         'token': app_info['token'],
     }
-    res = client.post('http://127.0.0.1:3030/status_check', json=status_check)
+    res = client.post('/status_check', json=status_check)
     assert res.status_code == 201
     log_json = json.loads(res.text)
     assert 'app_name' in log_json
@@ -131,26 +131,27 @@ def test_post_status_check(client, app):
     count_checks = 10
     for i in range(count_checks):
         sleep(0.1)
-        client.post('http://127.0.0.1:3030/status_check', json=status_check)
+        client.post('/status_check', json=status_check)
     with app.app_context():
         assert ApplicationStatusCheck.query.count() == (count_checks + 1)
+
+    data = {'app_name': app_info['name'], 'token': app_info['token']}
+    res = client.get('/app', json=data)
+    assert res.status_code == 200
+    new_app_info = json.loads(res.text)
+    assert 'last_activity' in new_app_info
+    assert new_app_info['last_activity'] != 0
 
 
 def _add_app(client):
     fake = Faker('ru_RU')
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
     data = {
         'name': fake.name(),
         'checking_is_active': 1,
         'checking_interval': 30,
     }
 
-    return client.post('http://127.0.0.1:3030/app',
-                       json=data,
-                       headers=headers)
+    return client.post('/app', json=data)
 
 
 def _get_test_logs(app_info, count, days=120):
