@@ -1,7 +1,7 @@
 import datetime
 
 from flask_restful import Resource, reqparse
-from .models import db, MonitoredApp, ApplicationLog
+from .models import db, MonitoredApp, ApplicationLog, ApplicationStatusCheck
 from typing import Optional, Union
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -16,7 +16,7 @@ class Log(Resource):
         parser.add_argument('date_to', type=float)
         args = parser.parse_args()
 
-        app = cls.get_app_by_args(args)
+        app = _get_app_by_args(args)
         if isinstance(app, tuple):
             return app
 
@@ -44,7 +44,7 @@ class Log(Resource):
         parser.add_argument('message', type=str)
         args = parser.parse_args()
 
-        app = cls.get_app_by_args(args)
+        app = _get_app_by_args(args)
         if isinstance(app, tuple):
             return app
 
@@ -79,37 +79,11 @@ class Log(Resource):
 
         return log_record.json(), 201
 
-    @classmethod
-    def get_app_by_args(cls, args: Optional[dict] = None) -> Union[MonitoredApp, tuple]:
-        if args is None:
-            parser = reqparse.RequestParser()
-            parser.add_argument('app_name', type=str)
-            parser.add_argument('token', type=str)
-            args = parser.parse_args()
-
-        app_name = args.get('app_name', '')
-        if not app_name:
-            return {'message': f'"app_name" is empty'}, 400
-
-        app = MonitoredApp.get_by_name(app_name)
-        if not app:
-            return {'message': f'App {app_name} not found'}, 404
-
-        token = args.get('token', '')
-
-        if not token:
-            return {'message': f'"token" is empty'}, 400
-
-        if not app.check_token(token):
-            return {'message': f'Invalid token'}, 401
-
-        return app
-
 
 class App(Resource):
     @classmethod
     def get(cls):
-        app = cls.get_app_by_args()
+        app = _get_app_by_args()
         if isinstance(app, tuple):
             return app
 
@@ -156,7 +130,7 @@ class App(Resource):
 
     @classmethod
     def delete(cls):
-        app = cls.get_app_by_args()
+        app = _get_app_by_args()
         if isinstance(app, tuple):
             return app
         if app:
@@ -164,34 +138,34 @@ class App(Resource):
             return {'message': 'App deleted'}, 200
         return {'message': 'App not found'}, 404
 
-    @classmethod
-    def get_app_by_args(cls, args: Optional[dict] = None) -> Union[MonitoredApp, tuple]:
-        if args is None:
-            parser = reqparse.RequestParser()
-            parser.add_argument('app_name', type=str)
-            parser.add_argument('token', type=str)
-            args = parser.parse_args()
-
-        app_name = args.get('app_name', '')
-        if not app_name:
-            return {'message': f'"app_name" is empty'}, 400
-
-        app = MonitoredApp.get_by_name(app_name)
-        if not app:
-            return {'message': f'App {app_name} not found'}, 404
-
-        token = args.get('token', '')
-
-        if not token:
-            return {'message': f'"token" is empty'}, 400
-
-        if not app.check_token(token):
-            return {'message': f'Invalid token'}, 401
-
-        return app
-
 
 class AppList(Resource):
     @classmethod
     def get(cls):
         return {'apps': [app.json() for app in MonitoredApp.get_all()]}
+
+
+def _get_app_by_args(args: Optional[dict] = None) -> Union[MonitoredApp, tuple]:
+    if args is None:
+        parser = reqparse.RequestParser()
+        parser.add_argument('app_name', type=str)
+        parser.add_argument('token', type=str)
+        args = parser.parse_args()
+
+    app_name = args.get('app_name', '')
+    if not app_name:
+        return {'message': f'"app_name" is empty'}, 400
+
+    app = MonitoredApp.get_by_name(app_name)
+    if not app:
+        return {'message': f'App {app_name} not found'}, 404
+
+    token = args.get('token', '')
+
+    if not token:
+        return {'message': f'"token" is empty'}, 400
+
+    if not app.check_token(token):
+        return {'message': f'Invalid token'}, 401
+
+    return app
