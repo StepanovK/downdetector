@@ -128,9 +128,9 @@ def test_post_status_check(client, app):
     with app.app_context():
         assert ApplicationStatusCheck.query.count() == 1
 
-    count_checks = 10
+    count_checks = 5
     for i in range(count_checks):
-        sleep(0.1)
+        sleep(0.05)
         client.post('/status_check', json=status_check)
     with app.app_context():
         assert ApplicationStatusCheck.query.count() == (count_checks + 1)
