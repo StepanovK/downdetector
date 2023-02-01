@@ -1,7 +1,7 @@
 import datetime
 
 from flask_restful import Resource, reqparse
-from .models import db, MonitoredApp, ApplicationLog, ApplicationStatusCheck
+from models import db, MonitoredApp, ApplicationLog, ApplicationStatusCheck
 from typing import Optional, Union
 from sqlalchemy.exc import SQLAlchemyError
 

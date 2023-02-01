@@ -1,6 +1,9 @@
+import sys
+sys.path.append('..')
+
 import datetime
 
-from down_detector.models import MonitoredApp, ApplicationLog, ApplicationStatusCheck
+from down_detector import MonitoredApp, ApplicationLog, ApplicationStatusCheck
 import json
 from faker import Faker
 from time import sleep

@@ -1,10 +1,21 @@
+import sys
+import os
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(basedir)
+
 from flask import Flask
 from flask_restful import Api
-from .models import db
-from .resources import App, AppList, Log, StatusCheck
+from models import db
+from resources import App, AppList, Log, StatusCheck
+import os
 
 
-def create_app(database_uri="sqlite:///down_detector.db"):
+def create_app(database_uri=None):
+    if database_uri is None:
+        database_path = os.path.split(basedir)[0]
+        database_path = os.path.join(database_path, 'down_detector.db')
+        database_uri = f"sqlite:///{database_path}"
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

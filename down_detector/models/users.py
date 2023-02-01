@@ -5,16 +5,20 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150))
-    telegram_id = db.Column(db.Integer)
+    login = db.Column(db.String(150), default='')
+    first_name = db.Column(db.String(150), default='')
+    last_name = db.Column(db.String(150), default='')
+    telegram_id = db.Column(db.Integer, nullable=True)
 
     subscribes = db.relationship('UserSubscribe', backref='user', lazy='dynamic')
 
     def json(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'telegram_id': self.tg_id,
+            'login': self.login,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'telegram_id': self.telegram_id,
             'subscribes': [subscribe.json() for subscribe in self.subscribes],
         }
 
