@@ -9,6 +9,7 @@ def app():
 
     with app.app_context():
         db.create_all()
+    app.testing = True
 
     yield app
 
